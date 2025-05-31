@@ -48,6 +48,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     try:
+        if not SENT_GROUP_ID or not SENT_GROUP_ID.startswith('-'):
+            logger.error("SENT_GROUP_ID не задан или не является числовым ID группы")
+            await update.message.reply_text("Ошибка: ID группы не настроен. Обратитесь к администратору.")
+            return
         await context.bot.send_message(
             chat_id=SENT_GROUP_ID,
             text=group_message
@@ -101,6 +105,10 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ).format(query.from_user.username, feedback_type)
 
     try:
+        if not SENT_GROUP_ID or not SENT_GROUP_ID.startswith('-'):
+            logger.error("SENT_GROUP_ID не задан или не является числовым ID группы")
+            await query.message.reply_text("Ошибка: ID группы не настроен. Обратитесь к администратору.")
+            return
         await context.bot.send_message(
             chat_id=SENT_GROUP_ID,
             text=feedback_message
@@ -115,10 +123,16 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     logger.info(f"Запуск бота... BOT_TOKEN: {BOT_TOKEN}, SENT_GROUP_ID: {SENT_GROUP_ID}")
-    if not BOT_TOKEN or not SENT_GROUP_ID:
-        logger.error("BOT_TOKEN или SENT_GROUP_ID не заданы")
+    logger.info(f"Файл hello.jpg существует: {os.path.exists('hello.jpg')}")
+    logger.info(f"Файл like.jpg существует: {os.path.exists('like.jpg')}")
+    if not BOT_TOKEN:
+        logger.error("BOT_TOKEN не задан")
         return
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    try:
+        application = ApplicationBuilder().token(BOT_TOKEN).build()
+    except Exception as e:
+        logger.error(f"Ошибка при создании приложения: {e}")
+        return
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("getchatid", get_chat_id))
@@ -126,7 +140,10 @@ def main():
     application.add_handler(CallbackQueryHandler(handle_rating, pattern="^(like|dislike)$"))
 
     logger.info("🤖 Бот успешно запущен!")
-    application.run_polling()
+    try:
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
+    except Exception as e:
+        logger.error(f"Ошибка при запуске polling: {e}")
 
 if __name__ == '__main__':
     main()
