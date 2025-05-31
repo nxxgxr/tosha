@@ -18,6 +18,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("Команда /start получена")
+    if not os.path.exists('hello.jpg'):
+        logger.error("Файл hello.jpg не найден")
+        await update.message.reply_text("Ошибка: изображение не найдено.")
+        return
     with open('hello.jpg', 'rb') as photo:
         await update.message.reply_photo(
             photo=photo,
@@ -27,6 +32,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(f"Получено сообщение от @{update.message.from_user.username}: {update.message.text}")
     user_message = update.message.text
     user = update.message.from_user
 
@@ -36,10 +42,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💬 Сообщение: {user_message}"
     )
 
-    await context.bot.send_message(
-        chat_id=SENT_GROUP_ID,
-        text=group_message
-    )
+    try:
+        await context.bot.send_message(
+            chat_id=SENT_GROUP_ID,
+            text=group_message
+        )
+        logger.info("Сообщение отправлено в группу")
+    except Exception as e:
+        logger.error(f"Ошибка при отправке в группу: {e}")
+        await update.message.reply_text("Произошла ошибка, попробуйте позже.")
+        return
 
     await update.message.reply_text(
         "Спасибо, я уже ищу 👀 решение!\n\n"
@@ -48,9 +60,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Пройти тест и узнать свои сильные стороны!", url="https://docs.google.com/forms/d/e/1FAIpQLScZQidI6fqnU4uSWX9Hy41ghGf8hsS7PR2yxYK3_s957vA7Ew/viewform?usp=header")]
         ])
     )
+    logger.info("Отправлено сообщение с тестом")
 
     await asyncio.sleep(35)
+    logger.info("Прошло 35 секунд, отправляю сообщение с оценкой")
 
+    if not os.path.exists('like.jpg'):
+        logger.error("Файл like.jpg не найден")
+        await update.message.reply_text("Ошибка: изображение не найдено.")
+        return
     with open('like.jpg', 'rb') as photo:
         await update.message.reply_photo(
             photo=photo,
@@ -63,6 +81,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("👎🏼", callback_data="dislike")]
             ])
         )
+    logger.info("Отправлено сообщение с оценкой")
 
 async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -76,15 +95,24 @@ async def handle_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📢 Человек @{} дал фидбэк: {}"
     ).format(query.from_user.username, feedback_type)
 
-    await context.bot.send_message(
-        chat_id=SENT_GROUP_ID,
-        text=feedback_message
-    )
+    try:
+        await context.bot.send_message(
+            chat_id=SENT_GROUP_ID,
+            text=feedback_message
+        )
+        logger.info("Фидбэк отправлен в группу")
+    except Exception as e:
+        logger.error(f"Ошибка при отправке фидбэка в группу: {e}")
+        await query.message.reply_text("Произошла ошибка, попробуйте позже.")
+        return
 
     await query.message.reply_text("Спасибо за ответ⚡️ До скорых встреч!")
 
 def main():
-    logger.info("🚀 Запуск бота...")
+    logger.info(f"Запуск бота... BOT_TOKEN: {BOT_TOKEN}, SENT_GROUP_ID: {SENT_GROUP_ID}")
+    if not BOT_TOKEN or not SENT_GROUP_ID:
+        logger.error("BOT_TOKEN или SENT_GROUP_ID не заданы")
+        return
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
