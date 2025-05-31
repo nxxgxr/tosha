@@ -31,6 +31,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Для начала опиши проблему, которая тебя волнует."
         )
 
+async def get_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.message.chat_id
+    logger.info(f"Запрошен ID чата: {chat_id}")
+    await update.message.reply_text(f"ID этого чата: {chat_id}")
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Получено сообщение от @{update.message.from_user.username}: {update.message.text}")
     user_message = update.message.text
@@ -57,7 +62,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Спасибо, я уже ищу 👀 решение!\n\n"
         "А пока предлагаю тебе пройти короткий онлайн-тест, который поможет узнать ещё немного о тебе 🫵🏼",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Пройти тест и узнать свои сильные стороны!", url="https://docs.google.com/forms/d/e/1FAIpQLScZQidI6fqnU4uSWX9Hy41ghGf8hsS7PR2yxYK3_s957vA7Ew/viewform?usp=header")]
+            [InlineKeyboardButton("Пройти тест и узнать свои сильные стороны!", url="https://forms.yandex.ru/u/67d8756002848f4bec767854/")]
         ])
     )
     logger.info("Отправлено сообщение с тестом")
@@ -116,6 +121,7 @@ def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("getchatid", get_chat_id))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_rating, pattern="^(like|dislike)$"))
 
