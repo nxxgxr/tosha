@@ -26,10 +26,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Для начала опиши проблему, которая тебя волнует."
         )
 
-async def get_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.message.chat_id
-    await update.message.reply_text(f"ID этой группы: {chat_id}")
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     user = update.message.from_user
@@ -92,7 +88,6 @@ def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("getid", get_chat_id))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_rating, pattern="^(like|dislike)$"))
 
@@ -101,7 +96,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-</xaiArtifact>
-
-**Что изменилось**:
-- Добавлена функция `get_chat_id`, ко
